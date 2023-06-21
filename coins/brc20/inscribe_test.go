@@ -7,7 +7,6 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
-	"github.com/stretchr/testify/require"
 )
 
 func TestInscribe(t *testing.T) {
@@ -136,9 +135,6 @@ func TestBrc30(t *testing.T) {
 		t.Fatal("build inscribe error:", err.Error())
 	}
 
-	hehe, err := tool.getCommitTxHex()
-	require.NoError(t, err)
-	t.Log("commit tx: ", hehe)
 	//send commit tx
 	commitTXID, err := client.SendRawTransaction(tool.CommitTx, true)
 	if err != nil {
