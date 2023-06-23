@@ -200,16 +200,24 @@ func TestBrc30(t *testing.T) {
 
 func TestAutoBRC30(t *testing.T) {
 	inscriptions := []string{
-		`{"p":"brc-20","op":"deploy","tick":"lf06","max":"21000000","lim":"1000","dec":"3"}`,
-		`{"p":"brc-20","op":"mint","tick":"lf06","amt":"1000"}`,
-		`{"p":"brc20-s","op":"deploy","t":"pool","pid":"d2fcc4c3fc#01","stake":"lf06","earn":"abcd","erate":"1000","dec":"2","dmax":"1000000","total":"40000000","only":"1"}`,
-		`{"p":"brc20-s","op":"stake","pid":"d2fcc4c3fc#01","amt":"1000"}`,
-		`{"p":"brc20-s","op":"unstake","pid":"d2fcc4c3fc#01","amt":"100"}`,
-		`{"p":"brc20-s","op":"mint","tick":"abcd","tid":"d2fcc4c3fc","amt":"100"}`,
-		`{"p":"brc20-s","op":"transfer","tid":"d2fcc4c3fc","tick":"abcd","amt":"1"}`,
+		`{"p":"brc-20","op":"deploy","tick":"lf08","max":"21000000","lim":"1000","dec":"3"}`,
+		`{"p":"brc-20","op":"mint","tick":"lf08","amt":"1000"}`,
+		`{"p":"brc20-s","op":"deploy","t":"pool","pid":"b9429047e5#01","stake":"lf08","earn":"aaab","erate":"1000","dec":"2","dmax":"1000000","total":"21000000","only":"1"}`,
+		`{"p":"brc20-s","op":"stake","pid":"b9429047e5#01","amt":"1000"}`,
+		`{"p":"brc20-s","op":"unstake","pid":"b9429047e5#01","amt":"100"}`,
+		`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"b9429047e5","amt":"100"}`,
+		`{"p":"brc20-s","op":"transfer","tid":"b9429047e5","tick":"aaab","amt":"100"}`,
+		`{"p":"brc-20","op":"transfer","tick":"lf08","amt":"100"}`,
 	}
 	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
 }
+
+func TestCaculateHash(t *testing.T) {
+	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	hash := caculateTickID("aaab", 21000000, 2, addr, addr)
+	t.Log(hex.EncodeToString(hash))
+}
+
 func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
@@ -287,7 +295,6 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		t.Log("Reveal TXID:", revealTXID.String())
 		genrateBlock(t, client, address)
 	}
-	genrateBlock(t, client, address)
 }
 
 func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Address) {
@@ -311,13 +318,6 @@ func modeRpcClient() *rpcclient.Client {
 		log.Fatalf("error creating client: %v", err)
 	}
 	return client
-}
-
-func TestCaculateHash(t *testing.T) {
-
-	addr := "bc1pvk535u5eedhsx75r7mfvdru7t0kcr36mf9wuku7k68stc0ncss8qwzeahv"
-	hash := caculateTickID("abcd", 21000000, 18, addr, addr)
-	t.Log(hex.EncodeToString(hash))
 }
 
 func caculateTickID(tick string, supply int, dec int, from, to string) []byte {
