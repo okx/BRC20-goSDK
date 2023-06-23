@@ -137,30 +137,30 @@ func TestBrc30(t *testing.T) {
 	//
 	//inscriptionDataList = append(inscriptionDataList, InscriptionData{
 	//	ContentType: "text/plain;charset=utf-8",
-	//	Body:        []byte(`{"p":"brc20-s","op":"deploy","t":"pool","pid":"ddc8c2547a#01","stake":"lf06","earn":"abcd","erate":"1000","dec":"2","dmax":"1000000","total":"40000000","only":"1"}`),
+	//	Body:        []byte(`{"p":"brc20-s","op":"deploy","t":"pool","pid":"d2fcc4c3fc#01","stake":"lf06","earn":"abcd","erate":"1000","dec":"2","dmax":"1000000","total":"40000000","only":"1"}`),
 	//	RevealAddr:  addr,
 	//})
 	//
 	//inscriptionDataList = append(inscriptionDataList, InscriptionData{
 	//	ContentType: "text/plain;charset=utf-8",
-	//	Body:        []byte(`{"p":"brc20-s","op":"stake","pid":"ddc8c2547a#01","amt":"1000"}`),
+	//	Body:        []byte(`{"p":"brc20-s","op":"stake","pid":"d2fcc4c3fc#01","amt":"1000"}`),
 	//	RevealAddr:  addr,
 	//})
 
 	//inscriptionDataList = append(inscriptionDataList, InscriptionData{
 	//	ContentType: "text/plain;charset=utf-8",
-	//	Body:        []byte(`{"p":"brc20-s","op":"unstake","pid":"ddc8c2547a#01","amt":"100"}`),
+	//	Body:        []byte(`{"p":"brc20-s","op":"unstake","pid":"d2fcc4c3fc#01","amt":"100"}`),
 	//	RevealAddr:  addr,
 	//})
 
 	//inscriptionDataList = append(inscriptionDataList, InscriptionData{
 	//	ContentType: "text/plain;charset=utf-8",
-	//	Body:        []byte(`{"p":"brc20-s","op":"mint","tick":"abcd","tid":"ddc8c2547a","amt":"100"}`),
+	//	Body:        []byte(`{"p":"brc20-s","op":"mint","tick":"abcd","tid":"d2fcc4c3fc","amt":"100"}`),
 	//	RevealAddr:  addr,
 	//})
 	inscriptionDataList = append(inscriptionDataList, InscriptionData{
 		ContentType: "text/plain;charset=utf-8",
-		Body:        []byte(`{"p":"brc20-s","op":"transfer","tid":"ddc8c2547a","tick":"abcd","amt":"1"}`),
+		Body:        []byte(`{"p":"brc20-s","op":"transfer","tid":"d2fcc4c3fc","tick":"abcd","amt":"1"}`),
 		RevealAddr:  addr,
 	})
 
@@ -202,11 +202,11 @@ func TestAutoBRC30(t *testing.T) {
 	inscriptions := []string{
 		`{"p":"brc-20","op":"deploy","tick":"lf06","max":"21000000","lim":"1000","dec":"3"}`,
 		`{"p":"brc-20","op":"mint","tick":"lf06","amt":"1000"}`,
-		`{"p":"brc20-s","op":"deploy","t":"pool","pid":"ddc8c2547a#01","stake":"lf06","earn":"abcd","erate":"1000","dec":"2","dmax":"1000000","total":"40000000","only":"1"}`,
-		`{"p":"brc20-s","op":"stake","pid":"ddc8c2547a#01","amt":"1000"}`,
-		`{"p":"brc20-s","op":"unstake","pid":"ddc8c2547a#01","amt":"100"}`,
-		`{"p":"brc20-s","op":"mint","tick":"abcd","tid":"ddc8c2547a","amt":"100"}`,
-		`{"p":"brc20-s","op":"transfer","tid":"ddc8c2547a","tick":"abcd","amt":"1"}`,
+		`{"p":"brc20-s","op":"deploy","t":"pool","pid":"d2fcc4c3fc#01","stake":"lf06","earn":"abcd","erate":"1000","dec":"2","dmax":"1000000","total":"40000000","only":"1"}`,
+		`{"p":"brc20-s","op":"stake","pid":"d2fcc4c3fc#01","amt":"1000"}`,
+		`{"p":"brc20-s","op":"unstake","pid":"d2fcc4c3fc#01","amt":"100"}`,
+		`{"p":"brc20-s","op":"mint","tick":"abcd","tid":"d2fcc4c3fc","amt":"100"}`,
+		`{"p":"brc20-s","op":"transfer","tid":"d2fcc4c3fc","tick":"abcd","amt":"1"}`,
 	}
 	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
 }
@@ -315,13 +315,14 @@ func modeRpcClient() *rpcclient.Client {
 
 func TestCaculateHash(t *testing.T) {
 
-	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	hash := caculateTickID(40000000, 2, addr, addr)
+	addr := "bc1pvk535u5eedhsx75r7mfvdru7t0kcr36mf9wuku7k68stc0ncss8qwzeahv"
+	hash := caculateTickID("abcd", 21000000, 18, addr, addr)
 	t.Log(hex.EncodeToString(hash))
 }
 
-func caculateTickID(supply int, dec int, from, to string) []byte {
+func caculateTickID(tick string, supply int, dec int, from, to string) []byte {
 	builder := strings.Builder{}
+	builder.Write([]byte(tick))
 	builder.Write([]byte(fmt.Sprintf("%d", supply)))
 	builder.Write([]byte(fmt.Sprintf("%d", dec)))
 	builder.Write([]byte(from))
