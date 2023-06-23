@@ -1,9 +1,13 @@
 package brc20
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/btcsuite/btcd/btcutil"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -296,9 +300,9 @@ func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Addres
 
 func modeRpcClient() *rpcclient.Client {
 	connCfg := &rpcclient.ConnConfig{
-		Host:         "18.167.77.79:18443",
-		User:         "bitcoinrpc",
-		Pass:         "bitcoinrpc",
+		Host:         "<ip>:<port>",
+		User:         "<username>",
+		Pass:         "<password>",
 		HTTPPostMode: true,
 		DisableTLS:   true,
 	}
@@ -307,4 +311,24 @@ func modeRpcClient() *rpcclient.Client {
 		log.Fatalf("error creating client: %v", err)
 	}
 	return client
+}
+
+func TestCaculateHash(t *testing.T) {
+
+	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	hash := caculateTickID(40000000, 2, addr, addr)
+	t.Log(hex.EncodeToString(hash))
+}
+
+func caculateTickID(supply int, dec int, from, to string) []byte {
+	builder := strings.Builder{}
+	builder.Write([]byte(fmt.Sprintf("%d", supply)))
+	builder.Write([]byte(fmt.Sprintf("%d", dec)))
+	builder.Write([]byte(from))
+	builder.Write([]byte(to))
+	fmt.Println("builder", builder.String())
+	hasher := sha256.New()
+	hasher.Write([]byte(builder.String()))
+	b := hasher.Sum(nil)
+	return b
 }
