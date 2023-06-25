@@ -247,7 +247,7 @@ func TestAutoBRC30(t *testing.T) {
 func TestCaculateHash(t *testing.T) {
 	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
 	hash := caculateTickID("b005", 21000000, 2, addr, addr)
-	t.Log(hex.EncodeToString(hash))
+	t.Log("TID:", hex.EncodeToString(hash)[0:10])
 }
 
 func autoInscribe(t *testing.T, addr string, inscriptions []string) {
