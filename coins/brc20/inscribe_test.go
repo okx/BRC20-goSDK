@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcd/btcutil"
 	"log"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -226,7 +227,7 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 	}
-	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
+	autoInscribe(t, "bcrt1qupmx47ljd857hxum9gvl422yz0enxjh9kexsm8", inscriptions)
 }
 
 func TestCaculateHash(t *testing.T) {
@@ -262,7 +263,9 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 	}
 	for i, _ := range utxos {
 		if utxos[i].Amount > 20 {
-			prevout.Amount = int64(utxos[i].Amount * 100000000)
+			x := new(big.Int)
+			x.SetString(fmt.Sprintf("%.0f", utxos[i].Amount*1e8), 10)
+			prevout.Amount = x.Int64()
 			prevout.TxId = utxos[i].TxID
 			prevout.VOut = utxos[i].Vout
 			break
