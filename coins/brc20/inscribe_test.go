@@ -219,8 +219,8 @@ func TestAutoBRC30(t *testing.T) {
 	// c2dce1ef8#01 brc20(b002) -> brc30(b003) share
 	// 7087ee2f6b#01 brc20(b002) -> brc30(b005) share fixed
 	inscriptions := []string{
-		//`{"p":"brc-20","op":"deploy","tick":"b001","max":"21000000","lim":"1000","dec":"3"}`,
-		//`{"p":"brc-20","op":"mint","tick":"b001","amt":"1000"}`,
+		// `{"p":"brc-20","op":"deploy","tick":"ord1","max":"21000","lim":"1000","dec":"18"}`,
+		// `{"p":"brc-20","op":"mint","tick":"ord1","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b002","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b002","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b003","max":"21000000","lim":"1000","dec":"3"}`,
@@ -228,9 +228,10 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
 		// `{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
-		`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"d1f0731a5b#01","stake":"btc","earn":"abcd","erate":"1000","dec":"18","dmax":"21000","total":"21000","only":"1"}`,
-		//`{"p":"brc20-s","op":"deposit","pid":"c2dce1ef8e#01","amt":"18446744073709551615"}`,
-		//`{"p":"brc20-s","op":"deposit","pid":"f2f838e203#02","amt":"500"}`,
+
+		// `{"p":"brc20-s","op":"deploy","t":"fixed","pid":"c969bcd202#01","stake":"ord1","earn":"abce","erate":"1000","dec":"18","dmax":"21000","total":"21000","only":"1"}`,
+		// `{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"18446744073709551615"}`,
+		// `{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"1000"}`,
 		//`{"p":"brc20-s","op":"withdraw","pid":"f2f838e203#02","amt":"1"}`,
 		//`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"833814e8ba","amt":"100"}`,
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
@@ -267,6 +268,22 @@ func TestCaculateHash(t *testing.T) {
 	}
 	hash := caculateTickID(name, total, decimals, addr, addr)
 	t.Log("TID:", hex.EncodeToString(hash)[0:10])
+}
+
+func TestGenBlock(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
+	network := &chaincfg.RegressionNetParams
+	client := modeRpcClient()
+	defer client.Shutdown()
+	address, err := btcutil.DecodeAddress(addr, network)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+	genrateBlock(t, client, address)
 }
 
 func autoInscribe(t *testing.T, addr string, inscriptions []string) {
@@ -356,10 +373,13 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 }
 
 func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Address) {
-	maxTri := int64(3)
-	_, err := client.GenerateToAddress(1, address, &maxTri)
+	maxTri := int64(1)
+	blockHash, err := client.GenerateToAddress(1, address, &maxTri)
 	if err != nil {
 		t.Fatal("generate block failed", err.Error())
+	}
+	for i := 0; i < len(blockHash); i++ {
+		t.Log(blockHash[i])
 	}
 }
 
