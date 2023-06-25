@@ -233,7 +233,7 @@ func TestAutoBRC30(t *testing.T) {
 		// `{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"18446744073709551615"}`,
 		// `{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"1000"}`,
 		//`{"p":"brc20-s","op":"withdraw","pid":"f2f838e203#02","amt":"1"}`,
-		//`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"833814e8ba","amt":"100"}`,
+		`{"p":"brc20-s","op":"mint","tick":"abce","pid":"c969bcd202#01","amt":"100"}`,
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 	}
