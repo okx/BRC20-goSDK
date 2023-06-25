@@ -199,22 +199,39 @@ func TestBrc30(t *testing.T) {
 }
 
 func TestAutoBRC30(t *testing.T) {
+	// brc20 -- a001 ,a002 ,a003 ,a004
+	// brc30 --
+
+	// c41b7cf376#01 brc20(b001) ->  brc30(b001) only
+	// c41b7cf376#02 brc20(b002) -> brc30(b001) share
+	// f2f838e203#01 brc20(b001) ->  brc30(b001) only
+	// f2f838e203#02 brc20(b002) -> brc30(b001) share
+	// c2dce1ef8#01 brc20(b002) -> brc30(b003) share
+	// 7087ee2f6b#01 brc20(b002) -> brc30(b005) share fixed
 	inscriptions := []string{
-		`{"p":"brc-20","op":"deploy","tick":"lf08","max":"21000000","lim":"1000","dec":"3"}`,
-		`{"p":"brc-20","op":"mint","tick":"lf08","amt":"1000"}`,
-		`{"p":"brc20-s","op":"deploy","t":"pool","pid":"b9429047e5#01","stake":"lf08","earn":"aaab","erate":"1000","dec":"2","dmax":"1000000","total":"21000000","only":"1"}`,
-		`{"p":"brc20-s","op":"stake","pid":"b9429047e5#01","amt":"1000"}`,
-		`{"p":"brc20-s","op":"unstake","pid":"b9429047e5#01","amt":"100"}`,
-		`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"b9429047e5","amt":"100"}`,
-		`{"p":"brc20-s","op":"transfer","tid":"b9429047e5","tick":"aaab","amt":"100"}`,
-		`{"p":"brc-20","op":"transfer","tick":"lf08","amt":"100"}`,
+		//`{"p":"brc-20","op":"deploy","tick":"b001","max":"21000000","lim":"1000","dec":"3"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b001","amt":"1000"}`,
+		//`{"p":"brc-20","op":"deploy","tick":"b002","max":"21000000","lim":"1000","dec":"3"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b002","amt":"1000"}`,
+		//`{"p":"brc-20","op":"deploy","tick":"b003","max":"21000000","lim":"1000","dec":"3"}`,
+		`{"p":"brc20-s","op":"mint","tick":"aaab","pid":"b9429047e5#01","amt":"100"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
+		//`{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
+		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"7087ee2f6b#01","stake":"b002","earn":"b005","erate":"1000","dec":"2","dmax":"1000000","total":"21000000","only":""}`,
+		//`{"p":"brc20-s","op":"stake","pid":"c2dce1ef8e#01","amt":"18446744073709551615"}`,
+		//`{"p":"brc20-s","op":"stake","pid":"f2f838e203#02","amt":"500"}`,
+		//`{"p":"brc20-s","op":"unstake","pid":"f2f838e203#02","amt":"1"}`,
+		//`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"833814e8ba","amt":"100"}`,
+		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
+		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 	}
 	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
 }
 
 func TestCaculateHash(t *testing.T) {
 	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	hash := caculateTickID("aaab", 21000000, 2, addr, addr)
+	hash := caculateTickID("b005", 21000000, 2, addr, addr)
 	t.Log(hex.EncodeToString(hash))
 }
 
