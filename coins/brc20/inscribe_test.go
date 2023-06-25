@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -227,7 +228,7 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
 		// `{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
-		`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"7087ee2f6b#01","stake":"btc","earn":"abcd","erate":"1000","dec":"9","dmax":"21000000","total":"21000000","only":"1"}`,
+		`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"d1f0731a5b#01","stake":"btc","earn":"abcd","erate":"1000","dec":"18","dmax":"21000","total":"21000","only":"1"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"c2dce1ef8e#01","amt":"18446744073709551615"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"f2f838e203#02","amt":"500"}`,
 		//`{"p":"brc20-s","op":"withdraw","pid":"f2f838e203#02","amt":"1"}`,
@@ -245,8 +246,26 @@ func TestAutoBRC30(t *testing.T) {
 }
 
 func TestCaculateHash(t *testing.T) {
-	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	hash := caculateTickID("b005", 21000000, 2, addr, addr)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
+	name := os.Getenv("name")
+	dec := os.Getenv("decimal")
+	fmt.Println(dec)
+	decimals, err := strconv.Atoi(dec)
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	tmpTotal := os.Getenv("total")
+	total, err := strconv.Atoi(tmpTotal)
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	hash := caculateTickID(name, total, decimals, addr, addr)
 	t.Log("TID:", hex.EncodeToString(hash)[0:10])
 }
 
