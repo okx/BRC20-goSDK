@@ -227,7 +227,7 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 	}
-	autoInscribe(t, "bcrt1qupmx47ljd857hxum9gvl422yz0enxjh9kexsm8", inscriptions)
+	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
 }
 
 func TestCaculateHash(t *testing.T) {
@@ -250,7 +250,7 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		t.Fatal("decode addr error:", err.Error())
 	}
 
-	utxos, err := client.ListUnspentMinMaxAddresses(1, 100, []btcutil.Address{address})
+	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
 		t.Fatal("get utxo error:", err.Error())
 	}
@@ -261,6 +261,7 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		Address:    addr,
 		PrivateKey: priv.String(),
 	}
+	isfoundUtxo := false
 	for i, _ := range utxos {
 		if utxos[i].Amount > 20 {
 			x := new(big.Int)
@@ -268,8 +269,12 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 			prevout.Amount = x.Int64()
 			prevout.TxId = utxos[i].TxID
 			prevout.VOut = utxos[i].Vout
+			isfoundUtxo = true
 			break
 		}
+	}
+	if !isfoundUtxo {
+		t.Fatal("not found uxto.amount > 20 of addr:", address.EncodeAddress(), "\n please change addr")
 	}
 	commitTxPrevOutputList := make([]*PrevOutput, 0)
 	commitTxPrevOutputList = append(commitTxPrevOutputList, &prevout)
