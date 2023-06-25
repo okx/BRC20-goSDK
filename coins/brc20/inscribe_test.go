@@ -5,14 +5,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/btcutil"
 	"log"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/joho/godotenv"
 )
 
 func TestInscribe(t *testing.T) {
@@ -92,7 +95,12 @@ func TestBrc30(t *testing.T) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
 	defer client.Shutdown()
-	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
 	address, err := btcutil.DecodeAddress(addr, network)
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
@@ -215,11 +223,11 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"deploy","tick":"b002","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b002","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b003","max":"21000000","lim":"1000","dec":"3"}`,
-		`{"p":"brc20-s","op":"mint","tick":"aaab","pid":"b9429047e5#01","amt":"100"}`,
+		// `{"p":"brc20-s","op":"mint","tick":"aaab","pid":"b9429047e5#01","amt":"100"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
-		//`{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
+		// `{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
-		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"7087ee2f6b#01","stake":"b002","earn":"b005","erate":"1000","dec":"2","dmax":"1000000","total":"21000000","only":""}`,
+		`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"7087ee2f6b#01","stake":"btc","earn":"abcd","erate":"1000","dec":"9","dmax":"21000000","total":"21000000","only":"1"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"c2dce1ef8e#01","amt":"18446744073709551615"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"f2f838e203#02","amt":"500"}`,
 		//`{"p":"brc20-s","op":"withdraw","pid":"f2f838e203#02","amt":"1"}`,
@@ -227,7 +235,13 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 	}
-	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	taddr := os.Getenv("Address")
+	autoInscribe(t, taddr, inscriptions)
 }
 
 func TestCaculateHash(t *testing.T) {
@@ -331,10 +345,19 @@ func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Addres
 }
 
 func modeRpcClient() *rpcclient.Client {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+
+	Host := os.Getenv("Host")
+	User := os.Getenv("User")
+	Pass := os.Getenv("Pass")
+
 	connCfg := &rpcclient.ConnConfig{
-		Host:         "<ip>:<port>",
-		User:         "<username>",
-		Pass:         "<password>",
+		Host:         Host,
+		User:         User,
+		Pass:         Pass,
 		HTTPPostMode: true,
 		DisableTLS:   true,
 	}
