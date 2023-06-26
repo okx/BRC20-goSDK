@@ -246,7 +246,7 @@ func TestAutoBRC30(t *testing.T) {
 	autoInscribe(t, taddr, inscriptions)
 }
 
-func TestCaculateHash(t *testing.T) {
+func TestCalculateHash(t *testing.T) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Some error occured. Err: %s", err)
