@@ -266,7 +266,7 @@ func TestCalculateHash(t *testing.T) {
 		fmt.Println("Error during conversion")
 		return
 	}
-	hash := caculateTickID(name, total, decimals, addr, addr)
+	hash := calculateTickID(name, total, decimals, addr, addr)
 	t.Log("TID:", hex.EncodeToString(hash)[0:10])
 }
 
@@ -407,7 +407,7 @@ func modeRpcClient() *rpcclient.Client {
 	return client
 }
 
-func caculateTickID(tick string, supply int, dec int, from, to string) []byte {
+func calculateTickID(tick string, supply int, dec int, from, to string) []byte {
 	builder := strings.Builder{}
 	builder.Write([]byte(tick))
 	builder.Write([]byte(fmt.Sprintf("%d", supply)))
