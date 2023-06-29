@@ -5,10 +5,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/btcutil"
 	"log"
 	"strings"
 	"testing"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/mempool"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -212,9 +218,9 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"deploy","tick":"b001","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b001","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b002","max":"21000000","lim":"1000","dec":"3"}`,
-		//`{"p":"brc-20","op":"mint","tick":"b002","amt":"1000"}`,
+		//`{"p":"brc-20","op":"mint","tick":"lf08","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b003","max":"21000000","lim":"1000","dec":"3"}`,
-		`{"p":"brc20-s","op":"mint","tick":"aaab","pid":"b9429047e5#01","amt":"100"}`,
+		//`{"p":"brc20-s","op":"mint","tick":"aaab","pid":"b9429047e5#01","amt":"100"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
@@ -225,13 +231,32 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"833814e8ba","amt":"100"}`,
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
+
+		//`{"p":"brc-20","op":"deploy","tick":"b20a","max":"21000000","lim":"1000","dec":"18"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b20a","amt":"1000"}`,
+		`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"200"}`,
+
+		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"22f4b3f9fd#01","stake":"b20a","earn":"b30a","erate":"100","dec":"18","dmax":"1000000","total":"21000000","only":"true"}`,
+		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"20"}`,
+		//`{"p":"brc20-s","op":"mint","tick":"b30a","pid":"22f4b3f9fd#01","amt":"200000"}`,
+		//`{"p":"brc20-s","op":"transfer","tid":"22f4b3f9fd","tick":"b30a","amt":"500"}`,
+
 	}
-	autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
+
+	/* send inscribe transaction */
+	//autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
+
+	/* send transfer transaction */
+	_ = inscriptions
+	txID := "637cf4481d284de1cb407711566f2d1b53d64ccf63f9d03ee30e141f7483ad84" // tx id of inscribe transfer transaction
+	fromAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	toAddr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
+	autoTransfer(t, txID, fromAddr, toAddr)
 }
 
 func TestCaculateHash(t *testing.T) {
 	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	hash := caculateTickID("b005", 21000000, 2, addr, addr)
+	hash := caculateTickID("b30a", 21000000, 18, addr, addr)
 	t.Log(hex.EncodeToString(hash))
 }
 
@@ -312,6 +337,125 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		t.Log("Reveal TXID:", revealTXID.String())
 		genrateBlock(t, client, address)
 	}
+}
+
+func autoTransfer(t *testing.T, txID string, fromAddr string, toAddr string) {
+	network := &chaincfg.RegressionNetParams
+	client := modeRpcClient()
+	defer client.Shutdown()
+
+	fromAddress, err := btcutil.DecodeAddress(fromAddr, network)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+
+	//toAddress, err := btcutil.DecodeAddress(toAddr, network)
+	//if err != nil {
+	//	t.Fatal("decode addr error:", err.Error())
+	//}
+	privateKey, err := client.DumpPrivKey(fromAddress)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+
+	//utxos, err := client.ListUnspentMinMaxAddresses(1, 100, []btcutil.Address{address})
+	utxos, err := client.ListUnspent()
+	if err != nil {
+		t.Fatal("get utxo error:", err.Error())
+	}
+	var prevOutput = PrevOutput{
+		TxId:       txID,
+		VOut:       0,
+		Amount:     4999947860,
+		Address:    fromAddr,
+		PrivateKey: privateKey.String(),
+	}
+	txUnspent := false
+	for i, _ := range utxos {
+		if utxos[i].TxID == txID {
+			prevOutput.Amount = int64(utxos[i].Amount * 100000000)
+			prevOutput.TxId = utxos[i].TxID
+			prevOutput.VOut = utxos[i].Vout
+			txUnspent = true
+			break
+		}
+	}
+	if !txUnspent {
+		t.Fatal("tx has been spent:", txID)
+	}
+	//inputs := []btcjson.TransactionInput{
+	//	{
+	//		Txid: txID,
+	//		Vout: prevout.VOut,
+	//	},
+	//}
+	//amounts := map[btcutil.Address]btcutil.Amount {
+	//	toAddress: btcutil.Amount(prevout.Amount),
+	//}
+	//msgTx, err := client.CreateRawTransaction(inputs, amounts, nil)
+	//if err != nil {
+	//	t.Fatal("CreateRawTransaction error:", err.Error())
+	//}
+	//signedMsgTx, isSigned, err := client.SignRawTransaction(msgTx)
+	prevOutFetcher := txscript.NewMultiPrevOutFetcher(nil)
+	privateKeyList := []*btcec.PrivateKey{privateKey.PrivKey}
+	tx := wire.NewMsgTx(DefaultTxVersion)
+	changePkScript, err := AddrToPkScript(toAddr, network)
+	if err != nil {
+		t.Fatal("AddrToPkScript error:", err.Error())
+	}
+
+	txHash, err := chainhash.NewHashFromStr(prevOutput.TxId)
+	if err != nil {
+		t.Fatal("NewHashFromStr error:", err.Error())
+	}
+	outPoint := wire.NewOutPoint(txHash, prevOutput.VOut)
+	pkScript, err := AddrToPkScript(prevOutput.Address, network)
+	if err != nil {
+		t.Fatal("AddrToPkScript error:", err.Error())
+	}
+	txOut := wire.NewTxOut(prevOutput.Amount, pkScript)
+	prevOutFetcher.AddPrevOut(*outPoint, txOut)
+
+	in := wire.NewTxIn(outPoint, nil, nil)
+	in.Sequence = DefaultSequenceNum
+	tx.AddTxIn(in)
+
+	tx.AddTxOut(wire.NewTxOut(prevOutput.Amount, changePkScript))
+
+	txForEstimate := wire.NewMsgTx(DefaultTxVersion)
+	txForEstimate.TxIn = tx.TxIn
+	txForEstimate.TxOut = tx.TxOut
+	if err := sign(txForEstimate, privateKeyList, prevOutFetcher); err != nil {
+		t.Fatal("SignRawTransaction error:", err.Error())
+	}
+	commitFeeRate := 2
+	fee := btcutil.Amount(mempool.GetTxVirtualSize(btcutil.NewTx(txForEstimate))) * btcutil.Amount(commitFeeRate)
+	totalSenderAmount := btcutil.Amount(prevOutput.Amount)
+	changeAmount := totalSenderAmount - fee
+	if changeAmount > 0 {
+		tx.TxOut[len(tx.TxOut)-1].Value = int64(changeAmount)
+	} else {
+		tx.TxOut = tx.TxOut[:len(tx.TxOut)-1]
+		if changeAmount < 0 {
+			t.Fatal("insufficient balance")
+		}
+	}
+
+	err = sign(tx, privateKeyList, prevOutFetcher)
+	if err != nil {
+		t.Fatal("SignRawTransaction error:", err.Error())
+	}
+	//if !isSigned {
+	//	t.Fatal("SignRawTransaction failed")
+	//}
+	commitTXID, err := client.SendRawTransaction(tx, true)
+
+	if err != nil {
+		t.Fatal("send commit error:", err.Error(), "commit tx", tx)
+	}
+	t.Log("Commit TXID:", commitTXID.String())
+	genrateBlock(t, client, fromAddress)
 }
 
 func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Address) {
