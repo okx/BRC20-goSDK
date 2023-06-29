@@ -6,18 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/mempool"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/joho/godotenv"
 )
 
 func TestInscribe(t *testing.T) {
@@ -97,7 +100,12 @@ func TestBrc30(t *testing.T) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
 	defer client.Shutdown()
-	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
 	address, err := btcutil.DecodeAddress(addr, network)
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
@@ -215,8 +223,8 @@ func TestAutoBRC30(t *testing.T) {
 	// c2dce1ef8#01 brc20(b002) -> brc30(b003) share
 	// 7087ee2f6b#01 brc20(b002) -> brc30(b005) share fixed
 	inscriptions := []string{
-		//`{"p":"brc-20","op":"deploy","tick":"b001","max":"21000000","lim":"1000","dec":"3"}`,
-		//`{"p":"brc-20","op":"mint","tick":"b001","amt":"1000"}`,
+		// `{"p":"brc-20","op":"deploy","tick":"ord1","max":"21000","lim":"1000","dec":"18"}`,
+		// `{"p":"brc-20","op":"mint","tick":"ord1","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b002","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"lf08","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b003","max":"21000000","lim":"1000","dec":"3"}`,
@@ -224,17 +232,18 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"mint","tick":"b003","amt":"1000"}`,
 		//`{"p":"brc-20","op":"deploy","tick":"b004","max":"21000000","lim":"1000","dec":"3"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b004","amt":"1000"}`,
-		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"7087ee2f6b#01","stake":"b002","earn":"b005","erate":"1000","dec":"2","dmax":"1000000","total":"21000000","only":""}`,
-		//`{"p":"brc20-s","op":"deposit","pid":"c2dce1ef8e#01","amt":"18446744073709551615"}`,
-		//`{"p":"brc20-s","op":"deposit","pid":"f2f838e203#02","amt":"500"}`,
+
+		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"c969bcd202#01","stake":"ord1","earn":"abce","erate":"1000","dec":"18","dmax":"21000","total":"21000","only":"1"}`,
+		//`{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"18446744073709551615"}`,
+		//`{"p":"brc20-s","op":"deposit","pid":"c969bcd202#01","amt":"1000"}`,
 		//`{"p":"brc20-s","op":"withdraw","pid":"f2f838e203#02","amt":"1"}`,
-		//`{"p":"brc20-s","op":"mint","tick":"aaab","tid":"833814e8ba","amt":"100"}`,
+		//`{"p":"brc20-s","op":"mint","tick":"abce","pid":"c969bcd202#01","amt":"100"}`,
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 
 		//`{"p":"brc-20","op":"deploy","tick":"b20a","max":"21000000","lim":"1000","dec":"18"}`,
 		//`{"p":"brc-20","op":"mint","tick":"b20a","amt":"1000"}`,
-		`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"200"}`,
+		`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"300"}`,
 
 		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"22f4b3f9fd#01","stake":"b20a","earn":"b30a","erate":"100","dec":"18","dmax":"1000000","total":"21000000","only":"true"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"20"}`,
@@ -248,16 +257,50 @@ func TestAutoBRC30(t *testing.T) {
 
 	/* send transfer transaction */
 	_ = inscriptions
-	txID := "637cf4481d284de1cb407711566f2d1b53d64ccf63f9d03ee30e141f7483ad84" // tx id of inscribe transfer transaction
+	txID := "3d4cfbbcf1c819c410ee9a9a6567c65db4be32c5a131c3dc16802baa88b5c96b" // tx id of inscribe transfer transaction
 	fromAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
 	toAddr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
 	autoTransfer(t, txID, fromAddr, toAddr)
 }
 
-func TestCaculateHash(t *testing.T) {
-	addr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	hash := caculateTickID("b30a", 21000000, 18, addr, addr)
-	t.Log(hex.EncodeToString(hash))
+func TestCalculateHash(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
+	name := os.Getenv("name")
+	dec := os.Getenv("decimal")
+	fmt.Println(dec)
+	decimals, err := strconv.Atoi(dec)
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	tmpTotal := os.Getenv("total")
+	total, err := strconv.Atoi(tmpTotal)
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	hash := calculateTickID(name, total, decimals, addr, addr)
+	t.Log("TID:", hex.EncodeToString(hash)[0:10])
+}
+
+func TestGenBlock(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+	addr := os.Getenv("Address")
+	network := &chaincfg.RegressionNetParams
+	client := modeRpcClient()
+	defer client.Shutdown()
+	address, err := btcutil.DecodeAddress(addr, network)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+	genrateBlock(t, client, address)
 }
 
 func autoInscribe(t *testing.T, addr string, inscriptions []string) {
@@ -274,7 +317,7 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		t.Fatal("decode addr error:", err.Error())
 	}
 
-	utxos, err := client.ListUnspentMinMaxAddresses(1, 100, []btcutil.Address{address})
+	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
 		t.Fatal("get utxo error:", err.Error())
 	}
@@ -285,13 +328,20 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		Address:    addr,
 		PrivateKey: priv.String(),
 	}
+	isfoundUtxo := false
 	for i, _ := range utxos {
 		if utxos[i].Amount > 20 {
-			prevout.Amount = int64(utxos[i].Amount * 100000000)
+			x := new(big.Int)
+			x.SetString(fmt.Sprintf("%.0f", utxos[i].Amount*1e8), 10)
+			prevout.Amount = x.Int64()
 			prevout.TxId = utxos[i].TxID
 			prevout.VOut = utxos[i].Vout
+			isfoundUtxo = true
 			break
 		}
+	}
+	if !isfoundUtxo {
+		t.Fatal("not found uxto.amount > 20 of addr:", address.EncodeAddress(), "\n please change addr")
 	}
 	commitTxPrevOutputList := make([]*PrevOutput, 0)
 	commitTxPrevOutputList = append(commitTxPrevOutputList, &prevout)
@@ -459,18 +509,30 @@ func autoTransfer(t *testing.T, txID string, fromAddr string, toAddr string) {
 }
 
 func genrateBlock(t *testing.T, client *rpcclient.Client, address btcutil.Address) {
-	maxTri := int64(3)
-	_, err := client.GenerateToAddress(1, address, &maxTri)
+	maxTri := int64(1)
+	blockHash, err := client.GenerateToAddress(1, address, &maxTri)
 	if err != nil {
 		t.Fatal("generate block failed", err.Error())
+	}
+	for i := 0; i < len(blockHash); i++ {
+		t.Log(blockHash[i])
 	}
 }
 
 func modeRpcClient() *rpcclient.Client {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+
+	Host := os.Getenv("Host")
+	User := os.Getenv("User")
+	Pass := os.Getenv("Pass")
+
 	connCfg := &rpcclient.ConnConfig{
-		Host:         "<ip>:<port>",
-		User:         "<username>",
-		Pass:         "<password>",
+		Host:         Host,
+		User:         User,
+		Pass:         Pass,
 		HTTPPostMode: true,
 		DisableTLS:   true,
 	}
@@ -481,7 +543,7 @@ func modeRpcClient() *rpcclient.Client {
 	return client
 }
 
-func caculateTickID(tick string, supply int, dec int, from, to string) []byte {
+func calculateTickID(tick string, supply int, dec int, from, to string) []byte {
 	builder := strings.Builder{}
 	builder.Write([]byte(tick))
 	builder.Write([]byte(fmt.Sprintf("%d", supply)))

@@ -1,2 +1,3 @@
 .idea
 go.sum
+/coins/brc20/.env
