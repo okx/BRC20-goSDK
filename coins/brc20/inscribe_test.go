@@ -241,26 +241,29 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc20-s","op":"transfer","tid":"833814e8ba","tick":"aaab","amt":"100"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b002","amt":"100"}`,
 
-		//`{"p":"brc-20","op":"deploy","tick":"b20a","max":"21000000","lim":"1000","dec":"18"}`,
-		//`{"p":"brc-20","op":"mint","tick":"b20a","amt":"1000"}`,
-		`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"300"}`,
+		//`{"p":"brc-20","op":"deploy","tick":"b20b","max":"21000000","lim":"1000","dec":"18"}`,
+		//`{"p":"brc-20","op":"mint","tick":"b20b","amt":"1000"}`,
+		//`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"300"}`,
 
 		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"22f4b3f9fd#01","stake":"b20a","earn":"b30a","erate":"100","dec":"18","dmax":"1000000","total":"21000000","only":"true"}`,
 		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"20"}`,
-		//`{"p":"brc20-s","op":"mint","tick":"b30a","pid":"22f4b3f9fd#01","amt":"200000"}`,
-		//`{"p":"brc20-s","op":"transfer","tid":"22f4b3f9fd","tick":"b30a","amt":"500"}`,
+		`{"p":"brc20-s","op":"mint","tick":"b30a","pid":"22f4b3f9fd#01","amt":"3000"}`,
+		//`{"p":"brc20-s","op":"transfer","tid":"22f4b3f9fd","tick":"b30a","amt":"300"}`,
 
+		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"500"}`,
 	}
 
 	/* send inscribe transaction */
-	//autoInscribe(t, "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf", inscriptions)
+	addr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
+	revealAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	autoInscribe(t, addr, revealAddr, inscriptions)
 
 	/* send transfer transaction */
-	_ = inscriptions
-	txID := "3d4cfbbcf1c819c410ee9a9a6567c65db4be32c5a131c3dc16802baa88b5c96b" // tx id of inscribe transfer transaction
-	fromAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
-	toAddr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
-	autoTransfer(t, txID, fromAddr, toAddr)
+	//_ = inscriptions
+	//txID := "21a4f1c3af4b718b4f2a7d3371c63a1c1415e19186a1f021e51247f27c346cca" // tx id of inscribe transfer transaction
+	//fromAddr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
+	//toAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	//autoTransfer(t, txID, fromAddr, toAddr)
 }
 
 func TestCalculateHash(t *testing.T) {
@@ -303,7 +306,7 @@ func TestGenBlock(t *testing.T) {
 	genrateBlock(t, client, address)
 }
 
-func autoInscribe(t *testing.T, addr string, inscriptions []string) {
+func autoInscribe(t *testing.T, addr string, revealAddr string, inscriptions []string) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
 	defer client.Shutdown()
@@ -351,7 +354,7 @@ func autoInscribe(t *testing.T, addr string, inscriptions []string) {
 		inscriptionDataList = append(inscriptionDataList, InscriptionData{
 			ContentType: "text/plain;charset=utf-8",
 			Body:        []byte(inscriptions[i]),
-			RevealAddr:  addr,
+			RevealAddr:  revealAddr,
 		})
 	}
 
