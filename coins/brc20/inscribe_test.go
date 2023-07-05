@@ -245,9 +245,9 @@ func TestAutoBRC30(t *testing.T) {
 		//`{"p":"brc-20","op":"mint","tick":"b20b","amt":"1000"}`,
 		//`{"p":"brc-20","op":"transfer","tick":"b20a","amt":"300"}`,
 
-		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"22f4b3f9fd#01","stake":"b20a","earn":"b30a","erate":"100","dec":"18","dmax":"1000000","total":"21000000","only":"true"}`,
-		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"20"}`,
-		`{"p":"brc20-s","op":"mint","tick":"b30a","pid":"22f4b3f9fd#01","amt":"3000"}`,
+		//`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"ee9b3ad9f4#01","stake":"b20b","earn":"b30b","erate":"10","dec":"18","dmax":"1000000","total":"21000000","only":"1"}`,
+		`{"p":"brc20-s","op":"deposit","pid":"ee9b3ad9f4#01","amt":"100"}`,
+		//`{"p":"brc20-s","op":"mint","tick":"b30a","pid":"22f4b3f9fd#01","amt":"3000"}`,
 		//`{"p":"brc20-s","op":"transfer","tid":"22f4b3f9fd","tick":"b30a","amt":"300"}`,
 
 		//`{"p":"brc20-s","op":"deposit","pid":"22f4b3f9fd#01","amt":"500"}`,
@@ -255,7 +255,7 @@ func TestAutoBRC30(t *testing.T) {
 
 	/* send inscribe transaction */
 	addr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
-	revealAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
+	revealAddr := addr
 	autoInscribe(t, addr, revealAddr, inscriptions)
 
 	/* send transfer transaction */
@@ -264,6 +264,11 @@ func TestAutoBRC30(t *testing.T) {
 	//fromAddr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
 	//toAddr := "bcrt1qvd26a8c26d4mu5fzyh74pvcp9ykgutxt9fktqf"
 	//autoTransfer(t, txID, fromAddr, toAddr)
+
+	/* Inscription minting to coinbase */
+	//addr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
+	//revealAddr := addr
+	//autoInscribeToCoinbase(t, addr, revealAddr, inscriptions)
 }
 
 func TestCalculateHash(t *testing.T) {
@@ -307,6 +312,14 @@ func TestGenBlock(t *testing.T) {
 }
 
 func autoInscribe(t *testing.T, addr string, revealAddr string, inscriptions []string) {
+	autoInscribeWithValue(t, addr, revealAddr, 546, inscriptions)
+}
+
+func autoInscribeToCoinbase(t *testing.T, addr string, revealAddr string, inscriptions []string) {
+	autoInscribeWithValue(t, addr, revealAddr, 0, inscriptions)
+}
+
+func autoInscribeWithValue(t *testing.T, addr string, revealAddr string, revealOutValue int64, inscriptions []string) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
 	defer client.Shutdown()
@@ -362,9 +375,10 @@ func autoInscribe(t *testing.T, addr string, revealAddr string, inscriptions []s
 		CommitTxPrevOutputList: commitTxPrevOutputList,
 		CommitFeeRate:          2,
 		RevealFeeRate:          2,
-		RevealOutValue:         546,
-		InscriptionDataList:    inscriptionDataList,
-		ChangeAddress:          addr,
+		//RevealOutValue:         546,
+		RevealOutValue:      revealOutValue,
+		InscriptionDataList: inscriptionDataList,
+		ChangeAddress:       addr,
 	}
 
 	requestBytes, _ := json.Marshal(request)

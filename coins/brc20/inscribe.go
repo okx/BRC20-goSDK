@@ -139,9 +139,9 @@ func newInscriptionTool(network *chaincfg.Params, request *InscriptionRequest) (
 func (tool *InscriptionTool) initTool(network *chaincfg.Params, request *InscriptionRequest) error {
 	destinations := make([]string, len(request.InscriptionDataList))
 	revealOutValue := DefaultRevealOutValue
-	if request.RevealOutValue > 0 {
-		revealOutValue = request.RevealOutValue
-	}
+	//if request.RevealOutValue > 0 {
+	revealOutValue = request.RevealOutValue
+	//}
 	for i := 0; i < len(request.InscriptionDataList); i++ {
 		inscriptionTxCtxData, err := createInscriptionTxCtxData(network, request, i)
 		if err != nil {
