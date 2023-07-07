@@ -110,12 +110,16 @@ func TestBrc30(t *testing.T) {
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
-	priv, err := client.DumpPrivKey(address)
+	priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
+	//priv, err := client.DumpPrivKey(address)
+	//if err != nil {
+	//	t.Fatal("decode addr error:", err.Error())
+	//}
 
-	utxos, err := client.ListUnspentMinMaxAddresses(1, 100, []btcutil.Address{address})
+	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
 		t.Fatal("get utxo error:", err.Error())
 	}
@@ -127,7 +131,7 @@ func TestBrc30(t *testing.T) {
 		PrivateKey: priv.String(),
 	}
 	for i, _ := range utxos {
-		if utxos[i].Amount > 20 {
+		if utxos[i].Amount > 1 {
 			prevout.Amount = int64(utxos[i].Amount * 100000000)
 			prevout.TxId = utxos[i].TxID
 			prevout.VOut = utxos[i].Vout
@@ -174,7 +178,7 @@ func TestBrc30(t *testing.T) {
 	//})
 	inscriptionDataList = append(inscriptionDataList, InscriptionData{
 		ContentType: "text/plain;charset=utf-8",
-		Body:        []byte(`{"p":"brc20-s","op":"transfer","tid":"d2fcc4c3fc","tick":"abcd","amt":"1"}`),
+		Body:        []byte(`{"p":"brc20-s","op":"deploy","t":"fixed","pid":"b9b7f089e0#01","stake":"ordi","earn":"b30b","erate":"10","dec":"18","dmax":"10000","total":"21000","only":"1"}`),
 		RevealAddr:  addr,
 	})
 
@@ -254,7 +258,7 @@ func TestAutoBRC30(t *testing.T) {
 	}
 
 	/* send inscribe transaction */
-	addr := "bcrt1qdk34rmzke023v04xxvpxz0fwauctsxk42ue2zj"
+	addr := "bc1q5pg2hhjw0w85p9zr5uqms5mt0dnlxxerqnqpuq"
 	revealAddr := addr
 	autoInscribe(t, addr, revealAddr, inscriptions)
 
@@ -320,7 +324,7 @@ func autoInscribeToCoinbase(t *testing.T, addr string, revealAddr string, inscri
 }
 
 func autoInscribeWithValue(t *testing.T, addr string, revealAddr string, revealOutValue int64, inscriptions []string) {
-	network := &chaincfg.RegressionNetParams
+	network := &chaincfg.MainNetParams
 	client := modeRpcClient()
 	defer client.Shutdown()
 
@@ -328,10 +332,14 @@ func autoInscribeWithValue(t *testing.T, addr string, revealAddr string, revealO
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
-	priv, err := client.DumpPrivKey(address)
+	priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
+	//priv, err := client.DumpPrivKey(address)
+	//if err != nil {
+	//	t.Fatal("decode addr error:", err.Error())
+	//}
 
 	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
@@ -346,7 +354,7 @@ func autoInscribeWithValue(t *testing.T, addr string, revealAddr string, revealO
 	}
 	isfoundUtxo := false
 	for i, _ := range utxos {
-		if utxos[i].Amount > 20 {
+		if utxos[i].Amount > 1 {
 			x := new(big.Int)
 			x.SetString(fmt.Sprintf("%.0f", utxos[i].Amount*1e8), 10)
 			prevout.Amount = x.Int64()
