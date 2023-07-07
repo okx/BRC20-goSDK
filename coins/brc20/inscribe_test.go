@@ -110,14 +110,14 @@ func TestBrc30(t *testing.T) {
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
-	priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
-	if err != nil {
-		t.Fatal("decode addr error:", err.Error())
-	}
-	//priv, err := client.DumpPrivKey(address)
+	//priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
 	//if err != nil {
 	//	t.Fatal("decode addr error:", err.Error())
 	//}
+	priv, err := client.DumpPrivKey(address)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
 
 	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
@@ -258,7 +258,7 @@ func TestAutoBRC30(t *testing.T) {
 	}
 
 	/* send inscribe transaction */
-	addr := "bc1q5pg2hhjw0w85p9zr5uqms5mt0dnlxxerqnqpuq"
+	addr := "bc1qkm4mx3r4ulda5e4pz0qanyef64cst7p9fk4lym"
 	revealAddr := addr
 	autoInscribe(t, addr, revealAddr, inscriptions)
 
@@ -332,14 +332,15 @@ func autoInscribeWithValue(t *testing.T, addr string, revealAddr string, revealO
 	if err != nil {
 		t.Fatal("decode addr error:", err.Error())
 	}
-	priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
-	if err != nil {
-		t.Fatal("decode addr error:", err.Error())
-	}
-	//priv, err := client.DumpPrivKey(address)
+
+	//priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
 	//if err != nil {
 	//	t.Fatal("decode addr error:", err.Error())
 	//}
+	priv, err := client.DumpPrivKey(address)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
 
 	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
 	if err != nil {
