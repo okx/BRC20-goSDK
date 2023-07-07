@@ -96,6 +96,17 @@ func TestInscribe(t *testing.T) {
 	t.Log(string(txsBytes))
 }
 
+func TestSimulateUseToDepositPool(t *testing.T) {
+	inscriptions := []string{
+		`{"p":"brc20-s","op":"deposit","pid":"b9b7f089e0#01","amt":"100"}`,
+	}
+
+	/* send inscribe transaction */
+	addr := "16G1xYBbiNG78LSuZdMqp6tux5xvVp9Wxh"
+	revealAddr := addr
+	autoSimulateUserInscribe(t, addr, revealAddr, inscriptions)
+}
+
 func TestBrc30(t *testing.T) {
 	network := &chaincfg.RegressionNetParams
 	client := modeRpcClient()
@@ -317,6 +328,93 @@ func TestGenBlock(t *testing.T) {
 
 func autoInscribe(t *testing.T, addr string, revealAddr string, inscriptions []string) {
 	autoInscribeWithValue(t, addr, revealAddr, 546, inscriptions)
+}
+
+func autoSimulateUserInscribe(t *testing.T, addr string, revealAddr string, inscriptions []string) {
+	network := &chaincfg.MainNetParams
+	client := modeRpcClient()
+	defer client.Shutdown()
+
+	address, err := btcutil.DecodeAddress(addr, network)
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+
+	priv, err := btcutil.DecodeWIF("cPnvkvUYyHcSSS26iD1dkrJdV7k1RoUqJLhn3CYxpo398PdLVE22")
+	if err != nil {
+		t.Fatal("decode addr error:", err.Error())
+	}
+
+	utxos, err := client.ListUnspentMinMaxAddresses(1, 100000, []btcutil.Address{address})
+	if err != nil {
+		t.Fatal("get utxo error:", err.Error())
+	}
+	var prevout = PrevOutput{
+		TxId:       "64d8369309e3c1be0010a8b19d892c394013a1d813f780559d715bee73645c42",
+		VOut:       1,
+		Amount:     4999947860,
+		Address:    addr,
+		PrivateKey: priv.String(),
+	}
+	isfoundUtxo := false
+	for i, _ := range utxos {
+		if utxos[i].Amount > 1 {
+			x := new(big.Int)
+			x.SetString(fmt.Sprintf("%.0f", utxos[i].Amount*1e8), 10)
+			prevout.Amount = x.Int64()
+			prevout.TxId = utxos[i].TxID
+			prevout.VOut = utxos[i].Vout
+			isfoundUtxo = true
+			break
+		}
+	}
+	if !isfoundUtxo {
+		t.Fatal("not found uxto.amount > 20 of addr:", address.EncodeAddress(), "\n please change addr")
+	}
+	commitTxPrevOutputList := make([]*PrevOutput, 0)
+	commitTxPrevOutputList = append(commitTxPrevOutputList, &prevout)
+
+	inscriptionDataList := make([]InscriptionData, 0)
+	for i, _ := range inscriptions {
+		inscriptionDataList = append(inscriptionDataList, InscriptionData{
+			ContentType: "text/plain;charset=utf-8",
+			Body:        []byte(inscriptions[i]),
+			RevealAddr:  revealAddr,
+		})
+	}
+
+	request := &InscriptionRequest{
+		CommitTxPrevOutputList: commitTxPrevOutputList,
+		CommitFeeRate:          2,
+		RevealFeeRate:          2,
+		RevealOutValue:         546,
+		InscriptionDataList:    inscriptionDataList,
+		ChangeAddress:          addr,
+	}
+
+	requestBytes, _ := json.Marshal(request)
+	log.Println(string(requestBytes))
+
+	tool, err := newInscriptionTool(network, request)
+	if err != nil {
+		t.Fatal("build inscribe error:", err.Error())
+	}
+
+	//send commit tx
+	commitTXID, err := client.SendRawTransaction(tool.CommitTx, true)
+	if err != nil {
+		t.Fatal("send commit error:", err.Error(), "commit tx", *tool.CommitTx)
+	}
+	t.Log("Commit TXID:", commitTXID.String())
+	genrateBlock(t, client, address)
+	for i, _ := range tool.RevealTx {
+		revealTXID, err := client.SendRawTransaction(tool.RevealTx[i], true)
+		if err != nil {
+			t.Fatal("send reveal error:", err.Error(), "commit tx", tool.CommitTx)
+		}
+		t.Log("Reveal TXID:", revealTXID.String())
+		genrateBlock(t, client, address)
+	}
 }
 
 func autoInscribeToCoinbase(t *testing.T, addr string, revealAddr string, inscriptions []string) {
