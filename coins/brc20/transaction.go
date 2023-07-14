@@ -147,6 +147,10 @@ func signInput(updater *psbt.Updater, i int, in *TxInput, prevOutFetcher *txscri
 			return err
 		}
 
+		if hashType != txscript.SigHashDefault {
+			witness[0] = append(witness[0], byte(hashtype))
+		}
+
 		updater.Upsbt.Inputs[i].TaprootKeySpendSig = witness[0]
 	} else if txscript.IsPayToPubKeyHash(prevPkScript) {
 		signature, err := txscript.RawTxInSignature(updater.Upsbt.UnsignedTx, i, prevPkScript, hashType, privKey)
