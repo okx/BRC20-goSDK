@@ -138,9 +138,7 @@ func signInput(updater *psbt.Updater, i int, in *TxInput, prevOutFetcher *txscri
 		updater.Upsbt.Inputs[i].TaprootInternalKey = internalPubKey
 
 		sigHashes := txscript.NewTxSigHashes(updater.Upsbt.UnsignedTx, prevOutFetcher)
-		if hashType == txscript.SigHashAll {
-			hashType = txscript.SigHashDefault
-		}
+
 		witness, err := txscript.TaprootWitnessSignature(updater.Upsbt.UnsignedTx, sigHashes,
 			i, in.Amount, prevPkScript, hashType, privKey)
 		if err != nil {
